@@ -346,53 +346,89 @@ function ComposeScreen({
         </div>
       </div>
 
-      {/* CSV Upload Section */}
+      {/* Who Gets What Section */}
       <div className="backdrop-blur-md bg-white/75 border border-white/[0.18] rounded-xl p-6 shadow-md space-y-5">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <FiUpload className="w-4 h-4 text-muted-foreground" />
-            <h3 className="text-sm font-semibold text-foreground tracking-tight">Recipient Mapping</h3>
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <FiUsers className="w-4 h-4 text-muted-foreground" />
+              <h3 className="text-sm font-semibold text-foreground tracking-tight">Who Gets What</h3>
+            </div>
+            <p className="text-xs text-muted-foreground ml-6">Add each recipient and the server file path(s) of the attachments they should receive</p>
           </div>
-          <span className="text-xs text-muted-foreground">{mappingRows.length} recipient{mappingRows.length !== 1 ? 's' : ''}</span>
+          <Badge variant="secondary" className="text-xs font-medium">{mappingRows.length} recipient{mappingRows.length !== 1 ? 's' : ''}</Badge>
         </div>
 
-        {/* Dropzone */}
+        {/* Quick Guide */}
+        <div className="bg-secondary/40 rounded-xl p-4 border border-border/40">
+          <p className="text-xs font-semibold text-foreground mb-2 flex items-center gap-1.5"><FiAlertCircle className="w-3.5 h-3.5 text-muted-foreground" /> How to fill this in</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <p className="text-xs font-medium text-foreground">Recipient Email</p>
+              <p className="text-xs text-muted-foreground mt-0.5">The email address of the person receiving the attachment</p>
+              <p className="text-xs text-muted-foreground/60 mt-1 font-mono">e.g. john@acme.com</p>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-foreground">Attachment Location</p>
+              <p className="text-xs text-muted-foreground mt-0.5">The server file path where the attachment is stored. Use commas to separate multiple files.</p>
+              <p className="text-xs text-muted-foreground/60 mt-1 font-mono">e.g. /reports/john-q4.pdf, /data/summary.xlsx</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Import via CSV */}
         <div
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onClick={() => fileInputRef.current?.click()}
-          className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all duration-200 ${isDragging ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40 hover:bg-secondary/30'}`}
+          className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all duration-200 ${isDragging ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40 hover:bg-secondary/30'}`}
         >
           <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleFileChange(file); e.target.value = '' }} />
-          <FiUpload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-          <p className="text-sm font-medium text-foreground">Drop a CSV file here or click to browse</p>
-          <p className="text-xs text-muted-foreground mt-1">Expected columns: email, attachment locations (comma-separated file paths)</p>
+          <div className="flex items-center justify-center gap-3">
+            <FiUpload className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+            <div className="text-left">
+              <p className="text-sm font-medium text-foreground">Import from CSV</p>
+              <p className="text-xs text-muted-foreground">Drop a .csv file or click to browse. Columns: email, attachment path(s)</p>
+            </div>
+          </div>
         </div>
 
-        {/* Mapping Table */}
+        {/* Recipient Table */}
         {mappingRows.length > 0 ? (
           <div className="border border-border/60 rounded-xl overflow-hidden">
             <ScrollArea className="max-h-[360px]">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-secondary/40">
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider">Recipient Email</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider">Attachment Location(s)</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider w-16 text-center">Actions</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider w-[40%]">
+                      <div className="flex items-center gap-1.5">
+                        <FiMail className="w-3 h-3" />
+                        Recipient Email
+                      </div>
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider">
+                      <div className="flex items-center gap-1.5">
+                        <FiFolder className="w-3 h-3" />
+                        Attachment Location(s)
+                      </div>
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider w-16 text-center">
+                      <FiTrash2 className="w-3 h-3 mx-auto" />
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {mappingRows.map((row) => (
+                  {mappingRows.map((row, rowIdx) => (
                     <TableRow key={row.id} className="group">
                       <TableCell className="py-2 px-4">
-                        <Input value={row.email} onChange={(e) => handleUpdateRow(row.id, 'email', e.target.value)} placeholder="recipient@company.com" className="h-9 bg-white/60 border-border/40 text-sm" />
+                        <Input value={row.email} onChange={(e) => handleUpdateRow(row.id, 'email', e.target.value)} placeholder={rowIdx === 0 ? 'john@acme.com' : 'recipient@company.com'} className="h-9 bg-white/60 border-border/40 text-sm" />
                       </TableCell>
                       <TableCell className="py-2 px-4">
-                        <Input value={row.attachments} onChange={(e) => handleUpdateRow(row.id, 'attachments', e.target.value)} placeholder="/path/to/report.pdf, /path/to/data.xlsx" className="h-9 bg-white/60 border-border/40 text-sm" />
+                        <Input value={row.attachments} onChange={(e) => handleUpdateRow(row.id, 'attachments', e.target.value)} placeholder={rowIdx === 0 ? '/reports/john-q4.pdf, /data/summary.xlsx' : '/path/to/file.pdf'} className="h-9 bg-white/60 border-border/40 text-sm" />
                       </TableCell>
                       <TableCell className="py-2 px-4 text-center">
-                        <Button variant="ghost" size="icon" onClick={() => handleDeleteRow(row.id)} className="h-8 w-8 text-muted-foreground hover:text-destructive">
+                        <Button variant="ghost" size="icon" onClick={() => handleDeleteRow(row.id)} className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity">
                           <FiTrash2 className="w-4 h-4" />
                         </Button>
                       </TableCell>
@@ -404,16 +440,16 @@ function ComposeScreen({
           </div>
         ) : (
           <div className="border border-dashed border-border rounded-xl p-10 text-center">
-            <FiUsers className="w-10 h-10 mx-auto mb-3 text-muted-foreground/40" />
+            <FiMail className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
             <p className="text-sm font-medium text-muted-foreground">No recipients added yet</p>
-            <p className="text-xs text-muted-foreground/70 mt-1">Add your first recipient or upload a CSV to get started</p>
+            <p className="text-xs text-muted-foreground/70 mt-1">Click "Add Recipient" below or import a CSV file above to get started</p>
           </div>
         )}
 
         <div className="flex items-center gap-3">
           <Button variant="outline" onClick={handleAddRow} className="gap-2">
             <FiPlus className="w-4 h-4" />
-            Add Row
+            Add Recipient
           </Button>
         </div>
       </div>
