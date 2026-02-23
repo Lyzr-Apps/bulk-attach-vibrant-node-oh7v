@@ -84,13 +84,14 @@ function parseCSV(text: string): MappingRow[] {
   if (lines.length === 0) return []
   const headerLine = lines[0].toLowerCase()
   let startIdx = 0
-  if (headerLine.includes('email') || headerLine.includes('attachments')) {
+  if (headerLine.includes('email') || headerLine.includes('attachment')) {
     startIdx = 1
   }
   const rows: MappingRow[] = []
   for (let i = startIdx; i < lines.length; i++) {
     const line = lines[i]
-    const parts: string[] = []
+    // Parse CSV fields respecting quoted values
+    const fields: string[] = []
     let current = ''
     let inQuotes = false
     for (let j = 0; j < line.length; j++) {
@@ -98,19 +99,32 @@ function parseCSV(text: string): MappingRow[] {
       if (ch === '"') {
         inQuotes = !inQuotes
       } else if (ch === ',' && !inQuotes) {
-        parts.push(current.trim())
+        fields.push(current.trim())
         current = ''
       } else {
         current += ch
       }
     }
-    parts.push(current.trim())
-    if (parts.length >= 1 && parts[0]) {
-      rows.push({
-        id: generateId(),
-        email: parts[0],
-        attachments: parts.slice(1).join(', ').replace(/^["']|["']$/g, ''),
-      })
+    fields.push(current.trim())
+    if (fields.length >= 1 && fields[0]) {
+      // First field is email, second field is the attachments string
+      // If CSV has only 2 columns (email, "file1.pdf, file2.pdf"), use field[1] directly
+      // If CSV has more columns and no quoting, join remaining fields as attachments
+      const email = fields[0].replace(/^["']|["']$/g, '').trim()
+      let attachments = ''
+      if (fields.length === 2) {
+        attachments = fields[1].replace(/^["']|["']$/g, '').trim()
+      } else if (fields.length > 2) {
+        // Multiple unquoted columns after email - treat them all as attachment filenames
+        attachments = fields.slice(1).map(f => f.replace(/^["']|["']$/g, '').trim()).filter(f => f).join(', ')
+      }
+      if (email) {
+        rows.push({
+          id: generateId(),
+          email,
+          attachments,
+        })
+      }
     }
   }
   return rows
@@ -780,12 +794,19 @@ export default function Page() {
     setErrorMessage(null)
     setActiveAgentId(VALIDATOR_AGENT_ID)
     try {
-      const message = JSON.stringify({
-        folderPath: folderPath,
-        mapping: mappingRows.filter(r => r.email.trim()).map(r => ({
+      const mappingEntries = mappingRows
+        .filter(r => r.email.trim())
+        .map(r => ({
           email: r.email.trim(),
-          attachments: r.attachments.split(',').map(a => a.trim()).filter(a => a),
-        })),
+          attachments: r.attachments
+            .split(',')
+            .map(a => a.trim())
+            .filter(a => a.length > 0),
+        }))
+      const message = JSON.stringify({
+        folderPath: folderPath || '/attachments/',
+        mapping: mappingEntries,
+        instructions: 'Validate each recipient entry. Check that emails have valid format (contain @ and domain). For filenames, consider ANY filename with a file extension (like .pdf, .docx, .xlsx, .csv, .txt, .png, .jpg, .zip, etc.) as a valid filename. Filenames may contain hyphens, underscores, spaces, and numbers. Do NOT flag filenames as invalid just because they contain special characters like hyphens or underscores - these are normal filename characters. Only flag a filename as invalid if it has no extension at all or is clearly not a filename.',
       })
       const result = await callAIAgent(message, VALIDATOR_AGENT_ID)
       const parsed = parseAgentResult(result)
