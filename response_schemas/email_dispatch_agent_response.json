@@ -1,0 +1,31 @@
+{
+  "agent_id": "699c6b00a774fa5750cb75bc",
+  "agent_name": "Email Dispatch Agent",
+  "agent_type": "json",
+  "accessor": "json",
+  "has_module_outputs": false,
+  "schema": {
+    "type": "object",
+    "properties": {
+      "totalSent": { "type": "number" },
+      "totalFailed": { "type": "number" },
+      "totalRecipients": { "type": "number" },
+      "results": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "email": { "type": "string" },
+            "attachmentsSent": { "type": "array", "items": { "type": "string" } },
+            "status": { "type": "string" },
+            "errorDetail": { "type": "string" }
+          },
+          "required": ["email", "attachmentsSent", "status", "errorDetail"],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": ["totalSent", "totalFailed", "totalRecipients", "results"],
+    "additionalProperties": false
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "agent_id": "699c6ae43aff77bf1a4ebd5e",
+  "agent_name": "Mapping Validator Agent",
+  "agent_type": "json",
+  "accessor": "json",
+  "has_module_outputs": false,
+  "schema": {
+    "type": "object",
+    "properties": {
+      "totalRecipients": { "type": "number" },
+      "validCount": { "type": "number" },
+      "invalidCount": { "type": "number" },
+      "results": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "email": { "type": "string" },
+            "attachments": { "type": "array", "items": { "type": "string" } },
+            "isValid": { "type": "boolean" },
+            "errors": { "type": "array", "items": { "type": "string" } }
+          },
+          "required": ["email", "attachments", "isValid", "errors"],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": ["totalRecipients", "validCount", "invalidCount", "results"],
+    "additionalProperties": false
+  }
+}

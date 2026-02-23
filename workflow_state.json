@@ -1,0 +1,29 @@
+{
+  "agents": [
+    {
+      "agent_id": "699c6ae43aff77bf1a4ebd5e",
+      "name": "Mapping Validator Agent",
+      "node_id": "mapping_validator_agent",
+      "agent_type": "json",
+      "tools": [],
+      "has_composio_tool": false,
+      "composio_app": null
+    },
+    {
+      "agent_id": "699c6b00a774fa5750cb75bc",
+      "name": "Email Dispatch Agent",
+      "node_id": "email_dispatch_agent",
+      "agent_type": "json",
+      "tools": ["GMAIL_SEND_EMAIL"],
+      "has_composio_tool": true,
+      "composio_app": "gmail"
+    }
+  ],
+  "agent_ids": [
+    "699c6ae43aff77bf1a4ebd5e",
+    "699c6b00a774fa5750cb75bc"
+  ],
+  "rag_ids": [],
+  "schedule_ids": [],
+  "schedules": []
+}

@@ -1,0 +1,82 @@
+{
+  "nodes": [
+    {
+      "id": "input_node",
+      "type": "Input",
+      "label": "User Input",
+      "nodeCategory": "input"
+    },
+    {
+      "id": "mapping_validator_agent",
+      "type": "Agent",
+      "label": "Mapping Validator Agent",
+      "nodeCategory": "agent",
+      "agent_id": "699c6ae43aff77bf1a4ebd5e"
+    },
+    {
+      "id": "email_dispatch_agent",
+      "type": "Agent",
+      "label": "Email Dispatch Agent",
+      "nodeCategory": "agent",
+      "agent_id": "699c6b00a774fa5750cb75bc"
+    },
+    {
+      "id": "output_node",
+      "type": "Output",
+      "label": "Output",
+      "nodeCategory": "end"
+    }
+  ],
+  "edges": [
+    {
+      "source": "input_node",
+      "target": "mapping_validator_agent"
+    },
+    {
+      "source": "mapping_validator_agent",
+      "target": "email_dispatch_agent"
+    },
+    {
+      "source": "email_dispatch_agent",
+      "target": "output_node"
+    }
+  ],
+  "agents": [
+    {
+      "agent_id": "699c6ae43aff77bf1a4ebd5e",
+      "name": "Mapping Validator Agent",
+      "description": "Validates the recipient-attachment mapping by confirming all listed filenames exist at the configured folder path, verifying email format, and flagging any mismatches or missing files. Returns a clean validated mapping or error report.",
+      "provider_id": "openai",
+      "model": "gpt-4.1",
+      "temperature": 0.2,
+      "top_p": 1,
+      "tool_configs": [],
+      "image_output_config": null,
+      "voice_config": null,
+      "file_output": false
+    },
+    {
+      "agent_id": "699c6b00a774fa5750cb75bc",
+      "name": "Email Dispatch Agent",
+      "description": "Iterates through the validated recipient list, composes identical emails (same subject + body) for each recipient, attaches the designated files from the server folder, and sends via Gmail. Reports per-recipient delivery status.",
+      "provider_id": "openai",
+      "model": "gpt-4.1",
+      "temperature": 0.2,
+      "top_p": 1,
+      "tool_configs": [
+        {
+          "tool_name": "gmail",
+          "tool_source": "composio",
+          "action_names": ["GMAIL_SEND_EMAIL"],
+          "persist_auth": true,
+          "server_id": "",
+          "provider_uuid": "6980d819100ddff45dec4e80",
+          "credential_id": ""
+        }
+      ],
+      "image_output_config": null,
+      "voice_config": null,
+      "file_output": false
+    }
+  ]
+}
