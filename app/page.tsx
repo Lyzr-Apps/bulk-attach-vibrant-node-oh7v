@@ -132,11 +132,11 @@ function parseCSV(text: string): MappingRow[] {
 
 // ---- Sample Data ----
 const SAMPLE_ROWS: MappingRow[] = [
-  { id: 'sample1', email: 'alice.johnson@acme.com', attachments: 'Q4-report.pdf, summary.xlsx' },
-  { id: 'sample2', email: 'bob.smith@widgets.io', attachments: 'invoice_2024.pdf' },
-  { id: 'sample3', email: 'carol.davis@techcorp.com', attachments: 'proposal.docx, timeline.pdf' },
-  { id: 'sample4', email: 'david.lee@startup.co', attachments: 'contract_v2.pdf' },
-  { id: 'sample5', email: 'invalid-email-format', attachments: 'doc.pdf' },
+  { id: 'sample1', email: 'alice.johnson@acme.com', attachments: '/shared/reports/Q4-report.pdf, /shared/reports/summary.xlsx' },
+  { id: 'sample2', email: 'bob.smith@widgets.io', attachments: '/shared/invoices/invoice_2024.pdf' },
+  { id: 'sample3', email: 'carol.davis@techcorp.com', attachments: '/shared/proposals/proposal.docx, /shared/timelines/timeline.pdf' },
+  { id: 'sample4', email: 'david.lee@startup.co', attachments: '/shared/contracts/contract_v2.pdf' },
+  { id: 'sample5', email: 'invalid-email-format', attachments: '/shared/docs/doc.pdf' },
 ]
 
 const SAMPLE_VALIDATION: ValidationData = {
@@ -144,11 +144,11 @@ const SAMPLE_VALIDATION: ValidationData = {
   validCount: 4,
   invalidCount: 1,
   results: [
-    { email: 'alice.johnson@acme.com', attachments: ['Q4-report.pdf', 'summary.xlsx'], isValid: true, errors: [] },
-    { email: 'bob.smith@widgets.io', attachments: ['invoice_2024.pdf'], isValid: true, errors: [] },
-    { email: 'carol.davis@techcorp.com', attachments: ['proposal.docx', 'timeline.pdf'], isValid: true, errors: [] },
-    { email: 'david.lee@startup.co', attachments: ['contract_v2.pdf'], isValid: true, errors: [] },
-    { email: 'invalid-email-format', attachments: ['doc.pdf'], isValid: false, errors: ['Invalid email format'] },
+    { email: 'alice.johnson@acme.com', attachments: ['/shared/reports/Q4-report.pdf', '/shared/reports/summary.xlsx'], isValid: true, errors: [] },
+    { email: 'bob.smith@widgets.io', attachments: ['/shared/invoices/invoice_2024.pdf'], isValid: true, errors: [] },
+    { email: 'carol.davis@techcorp.com', attachments: ['/shared/proposals/proposal.docx', '/shared/timelines/timeline.pdf'], isValid: true, errors: [] },
+    { email: 'david.lee@startup.co', attachments: ['/shared/contracts/contract_v2.pdf'], isValid: true, errors: [] },
+    { email: 'invalid-email-format', attachments: ['/shared/docs/doc.pdf'], isValid: false, errors: ['Invalid email format'] },
   ],
 }
 
@@ -157,10 +157,10 @@ const SAMPLE_DISPATCH: DispatchData = {
   totalFailed: 1,
   totalRecipients: 4,
   results: [
-    { email: 'alice.johnson@acme.com', attachmentsSent: ['Q4-report.pdf', 'summary.xlsx'], status: 'sent', errorDetail: '' },
-    { email: 'bob.smith@widgets.io', attachmentsSent: ['invoice_2024.pdf'], status: 'sent', errorDetail: '' },
-    { email: 'carol.davis@techcorp.com', attachmentsSent: ['proposal.docx', 'timeline.pdf'], status: 'sent', errorDetail: '' },
-    { email: 'david.lee@startup.co', attachmentsSent: [], status: 'failed', errorDetail: 'Attachment contract_v2.pdf not found in specified folder' },
+    { email: 'alice.johnson@acme.com', attachmentsSent: ['/shared/reports/Q4-report.pdf', '/shared/reports/summary.xlsx'], status: 'sent', errorDetail: '' },
+    { email: 'bob.smith@widgets.io', attachmentsSent: ['/shared/invoices/invoice_2024.pdf'], status: 'sent', errorDetail: '' },
+    { email: 'carol.davis@techcorp.com', attachmentsSent: ['/shared/proposals/proposal.docx', '/shared/timelines/timeline.pdf'], status: 'sent', errorDetail: '' },
+    { email: 'david.lee@startup.co', attachmentsSent: [], status: 'failed', errorDetail: 'File not found at /shared/contracts/contract_v2.pdf' },
   ],
 }
 
@@ -321,16 +321,17 @@ function ComposeScreen({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="backdrop-blur-md bg-white/75 border border-white/[0.18] rounded-xl p-6 shadow-md space-y-5">
           <div className="flex items-center gap-2 mb-1">
-            <FiFolder className="w-4 h-4 text-muted-foreground" />
-            <h3 className="text-sm font-semibold text-foreground tracking-tight">Folder & Subject</h3>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="folderPath" className="text-xs font-medium text-muted-foreground">Attachments Folder Path</Label>
-            <Input id="folderPath" placeholder="/path/to/attachments/" value={folderPath} onChange={(e) => setFolderPath(e.target.value)} className="bg-white/60 border-border/60" />
+            <FiMail className="w-4 h-4 text-muted-foreground" />
+            <h3 className="text-sm font-semibold text-foreground tracking-tight">Email Details</h3>
           </div>
           <div className="space-y-2">
             <Label htmlFor="subject" className="text-xs font-medium text-muted-foreground">Email Subject</Label>
             <Input id="subject" placeholder="Monthly Report - January 2025" value={subject} onChange={(e) => setSubject(e.target.value)} className="bg-white/60 border-border/60" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="folderPath" className="text-xs font-medium text-muted-foreground">Base Folder Path (optional)</Label>
+            <Input id="folderPath" placeholder="/shared/attachments/" value={folderPath} onChange={(e) => setFolderPath(e.target.value)} className="bg-white/60 border-border/60" />
+            <p className="text-xs text-muted-foreground/70">Common root path for attachments. You can also use full paths per recipient below.</p>
           </div>
         </div>
         <div className="backdrop-blur-md bg-white/75 border border-white/[0.18] rounded-xl p-6 shadow-md space-y-5">
@@ -366,7 +367,7 @@ function ComposeScreen({
           <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleFileChange(file); e.target.value = '' }} />
           <FiUpload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
           <p className="text-sm font-medium text-foreground">Drop a CSV file here or click to browse</p>
-          <p className="text-xs text-muted-foreground mt-1">Expected columns: email, attachments (comma-separated filenames)</p>
+          <p className="text-xs text-muted-foreground mt-1">Expected columns: email, attachment locations (comma-separated file paths)</p>
         </div>
 
         {/* Mapping Table */}
@@ -377,7 +378,7 @@ function ComposeScreen({
                 <TableHeader>
                   <TableRow className="bg-secondary/40">
                     <TableHead className="text-xs font-semibold uppercase tracking-wider">Recipient Email</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider">Attachment Filenames</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider">Attachment Location(s)</TableHead>
                     <TableHead className="text-xs font-semibold uppercase tracking-wider w-16 text-center">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -385,10 +386,10 @@ function ComposeScreen({
                   {mappingRows.map((row) => (
                     <TableRow key={row.id} className="group">
                       <TableCell className="py-2 px-4">
-                        <Input value={row.email} onChange={(e) => handleUpdateRow(row.id, 'email', e.target.value)} placeholder="email@example.com" className="h-9 bg-white/60 border-border/40 text-sm" />
+                        <Input value={row.email} onChange={(e) => handleUpdateRow(row.id, 'email', e.target.value)} placeholder="recipient@company.com" className="h-9 bg-white/60 border-border/40 text-sm" />
                       </TableCell>
                       <TableCell className="py-2 px-4">
-                        <Input value={row.attachments} onChange={(e) => handleUpdateRow(row.id, 'attachments', e.target.value)} placeholder="file1.pdf, file2.xlsx" className="h-9 bg-white/60 border-border/40 text-sm" />
+                        <Input value={row.attachments} onChange={(e) => handleUpdateRow(row.id, 'attachments', e.target.value)} placeholder="/path/to/report.pdf, /path/to/data.xlsx" className="h-9 bg-white/60 border-border/40 text-sm" />
                       </TableCell>
                       <TableCell className="py-2 px-4 text-center">
                         <Button variant="ghost" size="icon" onClick={() => handleDeleteRow(row.id)} className="h-8 w-8 text-muted-foreground hover:text-destructive">
@@ -405,7 +406,7 @@ function ComposeScreen({
           <div className="border border-dashed border-border rounded-xl p-10 text-center">
             <FiUsers className="w-10 h-10 mx-auto mb-3 text-muted-foreground/40" />
             <p className="text-sm font-medium text-muted-foreground">No recipients added yet</p>
-            <p className="text-xs text-muted-foreground/70 mt-1">Add your first recipient or upload a CSV file to get started</p>
+            <p className="text-xs text-muted-foreground/70 mt-1">Add your first recipient or upload a CSV to get started</p>
           </div>
         )}
 
@@ -468,8 +469,8 @@ function ReviewScreen({
             <p className="text-sm text-foreground font-medium">{subject || 'Not set'}</p>
           </div>
           <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Folder Path</p>
-            <p className="text-sm text-foreground font-medium break-all">{folderPath || 'Not set'}</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Base Path</p>
+            <p className="text-sm text-foreground font-medium break-all">{folderPath || 'Not specified'}</p>
           </div>
           <div>
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Recipients</p>
@@ -501,7 +502,7 @@ function ReviewScreen({
                 <TableHeader>
                   <TableRow className="bg-secondary/40">
                     <TableHead className="text-xs font-semibold uppercase tracking-wider">Recipient Email</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider">Attachments</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider">Attachment Location(s)</TableHead>
                     <TableHead className="text-xs font-semibold uppercase tracking-wider w-48">Validation Status</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -641,7 +642,7 @@ function StatusScreen({
                 <TableHeader>
                   <TableRow className="bg-secondary/40">
                     <TableHead className="text-xs font-semibold uppercase tracking-wider">Recipient Email</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider">Attachments Sent</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider">Attachment Location(s)</TableHead>
                     <TableHead className="text-xs font-semibold uppercase tracking-wider w-28">Status</TableHead>
                     <TableHead className="text-xs font-semibold uppercase tracking-wider">Error Detail</TableHead>
                   </TableRow>
@@ -768,7 +769,7 @@ export default function Page() {
   const handleSampleToggle = (checked: boolean) => {
     setShowSampleData(checked)
     if (checked) {
-      setFolderPath('/documents/quarterly-reports/')
+      setFolderPath('/shared/reports/')
       setSubject('Q4 2024 Report - Personalized Documents')
       setBody('Dear Recipient,\n\nPlease find your personalized quarterly documents attached to this email. The reports cover our Q4 2024 performance and projections.\n\nPlease review at your earliest convenience.\n\nBest regards,\nFinance Team')
       setMappingRows(SAMPLE_ROWS.map(r => ({ ...r, id: generateId() })))
@@ -804,9 +805,9 @@ export default function Page() {
             .filter(a => a.length > 0),
         }))
       const message = JSON.stringify({
-        folderPath: folderPath || '/attachments/',
+        folderPath: folderPath || '/',
         mapping: mappingEntries,
-        instructions: 'Validate each recipient entry. Check that emails have valid format (contain @ and domain). For filenames, consider ANY filename with a file extension (like .pdf, .docx, .xlsx, .csv, .txt, .png, .jpg, .zip, etc.) as a valid filename. Filenames may contain hyphens, underscores, spaces, and numbers. Do NOT flag filenames as invalid just because they contain special characters like hyphens or underscores - these are normal filename characters. Only flag a filename as invalid if it has no extension at all or is clearly not a filename.',
+        instructions: 'Validate each recipient entry. Check that emails have valid format (contain @ and a domain). For attachment locations, these are SERVER FILE PATHS (e.g., /shared/reports/Q4-report.pdf or report.pdf). Accept ANY value that looks like a file path or filename. Paths may contain forward slashes, hyphens, underscores, spaces, and numbers. A path is VALID if it is non-empty and ends with a file extension (like .pdf, .docx, .xlsx, .csv, .txt, .png, .jpg, .zip, etc.) OR if it is a reasonable directory/file reference. Only flag an attachment as invalid if it is completely empty. Do NOT be strict about path format - any non-empty string is acceptable as an attachment location.',
       })
       const result = await callAIAgent(message, VALIDATOR_AGENT_ID)
       const parsed = parseAgentResult(result)
@@ -924,7 +925,7 @@ export default function Page() {
   const handleExport = () => {
     if (!dispatchResults) return
     const results = Array.isArray(dispatchResults.results) ? dispatchResults.results : []
-    const headers = 'Email,Attachments,Status,Error\n'
+    const headers = 'Email,Attachment Locations,Status,Error\n'
     const rows = results.map(r =>
       `${r.email},"${Array.isArray(r.attachmentsSent) ? r.attachmentsSent.join(', ') : ''}",${r.status},"${r.errorDetail || ''}"`
     ).join('\n')
